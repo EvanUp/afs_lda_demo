@@ -8,7 +8,9 @@ if(!require(wordcloud2))install.packages("wordcloud2") # wordclouds
 if(!require(genius))install.packages("genius")
 if(!require(ggthemes))install.packages("ggthemes")
 if(!require(data.table))install.packages("data.table")
-if(!require(qdapRegex))install.packages("qdapRegex")
+if(!require(topicmodels))install.packages('topicmodels')
+
+setwd('Projects/NLP/lda_demo/code')
 
 
 
@@ -89,7 +91,7 @@ fix.contractions <- function(doc) {
 gaga_genius3$lyric <- sapply(gaga_genius3$lyric, fix.contractions)
 
 # get rid of special characters
-removeSpecialChars <- function(x) gsub("[^a-zA-Z0-9 ]", " ", x)
+removeSpecialChars <- function(x) gsub("[^a-zA-Z0-9 ]", "", x)
 gaga_genius3$lyric <- sapply(gaga_genius3$lyric, removeSpecialChars)
 
 # convert everything to lower case
@@ -120,12 +122,12 @@ full_word_count %>% ggplot() +
 # filtering words.
 gaga_words_filtered <- gaga_genius3 %>%
   unnest_tokens(word, lyric) %>%
-  #anti_join(stop_words) %>%
-  filter(nchar(word) > 0)
+  anti_join(stop_words) %>%
+  filter(nchar(word) > 3)
 
 # what are stop words?
-#head(stop_words)
-#a <- stop_words
+head(stop_words)
+a <- stop_words
 
 # Now lets find out what the most frequently used words are!
 gaga_words_filtered %>%
@@ -182,7 +184,6 @@ dtm <- df %>%
 # matrix. If dm$i does not contain a particular row index `p`, then row `p` is empty.
 ui = unique(dtm$i)
 dtm <- dtm[ui,]
-
 
 
 # Run LDA -----------------------------------------------------------------
@@ -267,4 +268,15 @@ topicmodels2LDAvis <- function(x, ...){
 
 # launches graph in browser
 serVis(topicmodels2LDAvis(vem_model_1))
+
+
+# AP LDA ----------------------------------------------------------------
+
+# Lets see it perform better...
+data('AssociatedPress')
+ap_lda <- LDA(AssociatedPress, k = 3, control = list(seed = 1234))
+terms_2 <- tidy(ap_lda, matrix = 'beta')
+
+viz_terms(terms_2)
+serVis(topicmodels2LDAvis(ap_lda))
 
